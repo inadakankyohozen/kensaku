@@ -471,6 +471,7 @@
     <button class="tab active" onclick="switchTab('search')">🔍 検索</button>
     <button class="tab" onclick="switchTab('expiry')">⏰ 有効期限</button>
     <button class="tab" onclick="switchTab('stats')">📊 集計</button>
+    <button class="tab" onclick="switchTab('company')">🏢 事業所</button>
   </div>
 
   <!-- 検索タブ -->
@@ -520,6 +521,34 @@
     <div id="expiry-results"></div>
   </div>
 
+
+  <!-- 事業所タブ -->
+  <div id="tab-company" style="display:none">
+    <div class="search-box">
+      <h2>🏢 採水事業所一覧</h2>
+      <div id="company-summary" style="font-size:13px;color:#666;margin-bottom:8px">読み込み中...</div>
+      <input type="text" class="search-input" id="company-search"
+        placeholder="事業所名で絞り込み..."
+        oninput="filterCompany()"
+        style="width:100%;margin-top:8px">
+    </div>
+
+    <!-- 事業所詳細パネル -->
+    <div class="detail-panel" id="company-detail-panel">
+      <div class="detail-header">
+        <div>
+          <div class="detail-name" id="company-detail-name"></div>
+          <div style="font-size:12px;color:#999;margin-top:2px" id="company-detail-addr"></div>
+        </div>
+        <button class="close-btn" onclick="closeCompanyDetail()">✕ 閉じる</button>
+      </div>
+      <div id="company-detail-body"></div>
+    </div>
+
+    <!-- 事業所一覧 -->
+    <div id="company-list"></div>
+  </div>
+
   <!-- 集計タブ -->
   <div id="tab-stats" style="display:none">
     <div id="stats-results">
@@ -553,13 +582,14 @@ window.onload = () => {
 // タブ切替
 // ============================================================
 function switchTab(name) {
-  ['search','expiry','stats'].forEach(t => {
+  ['search','expiry','stats','company'].forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
   });
   document.querySelectorAll('.tab').forEach((btn, i) => {
-    btn.classList.toggle('active', ['search','expiry','stats'][i] === name);
+    btn.classList.toggle('active', ['search','expiry','stats','company'][i] === name);
   });
-  if (name === 'stats') loadStats();
+  if (name === 'stats')   loadStats();
+  if (name === 'company') loadCompanyList();
 }
 
 // ============================================================
@@ -854,6 +884,128 @@ function saveAdminSettings() {
   document.getElementById('settings-hint').style.display = GAS_URL ? 'none' : 'block';
   if (GAS_URL) location.reload();
 }
+
+// ============================================================
+// 事業所タブ
+// ============================================================
+let allCompanies = [];
+
+function loadCompanyList() {
+  const el = document.getElementById('company-list');
+  el.innerHTML = '<div class="loading">読み込み中</div>';
+
+  callApi({ action: 'getCompanyList' }, data => {
+    if (data.status !== 'ok') {
+      el.innerHTML = '<div class="error-msg">取得できませんでした</div>';
+      return;
+    }
+    allCompanies = data.results;
+    document.getElementById('company-summary').textContent =
+      '契約採水事業所: ' + data.total + '件　登録採水員あり: ' +
+      data.results.filter(c => c.count > 0).length + '事業所';
+    renderCompanyList(allCompanies);
+  });
+}
+
+function filterCompany() {
+  const q = document.getElementById('company-search').value.trim();
+  if (!q) { renderCompanyList(allCompanies); return; }
+  const filtered = allCompanies.filter(c => c.name.includes(q));
+  renderCompanyList(filtered);
+}
+
+function renderCompanyList(list) {
+  const el = document.getElementById('company-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="error-msg">該当する事業所がありません</div>';
+    return;
+  }
+  el.innerHTML = list.map(c => {
+    const statusHtml = c.expired > 0
+      ? '<span class="badge badge-expired">期限切れ ' + c.expired + '名</span>'
+      : c.warning > 0
+      ? '<span class="badge badge-warning">要注意 ' + c.warning + '名</span>'
+      : c.count > 0
+      ? '<span class="badge badge-valid">有効</span>'
+      : '<span class="badge" style="background:#f0f0f0;color:#aaa">未登録</span>';
+
+    return '<div class="card" onclick="loadCompanyDetail('' + c.cd + '')">' +
+      '<div>' +
+        '<div style="font-size:15px;font-weight:600">' + c.name + '</div>' +
+        '<div style="font-size:12px;color:#888;margin-top:4px">' +
+          (c.addr || '住所未登録') +
+        '</div>' +
+      '</div>' +
+      '<div class="card-right">' +
+        '<span class="badge badge-id" style="font-size:14px">' + c.count + '名</span>' +
+        statusHtml +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function loadCompanyDetail(cd) {
+  const panel = document.getElementById('company-detail-panel');
+  panel.classList.add('show');
+  document.getElementById('company-detail-body').innerHTML = '<div class="loading">読み込み中</div>';
+  document.getElementById('company-detail-name').textContent = '';
+  document.getElementById('company-detail-addr').textContent = '';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  callApi({ action: 'getCompanyDetail', cd }, data => {
+    if (data.status !== 'ok') {
+      document.getElementById('company-detail-body').innerHTML =
+        '<div class="error-msg">' + data.message + '</div>';
+      return;
+    }
+    const c = data.company;
+    document.getElementById('company-detail-name').textContent = c.name;
+    document.getElementById('company-detail-addr').textContent =
+      (c.addr || '') + (c.tel ? '　TEL: ' + c.tel : '');
+    document.getElementById('company-detail-body').innerHTML =
+      renderCompanyDetail(data);
+  });
+}
+
+function closeCompanyDetail() {
+  document.getElementById('company-detail-panel').classList.remove('show');
+}
+
+function renderCompanyDetail(data) {
+  const c = data.company;
+  if (data.members.length === 0) {
+    return '<p style="color:#aaa;font-size:13px;padding:16px">採水員マスタに登録されている採水員が見つかりませんでした。</p>';
+  }
+
+  const rows = data.members.map((m, i) => {
+    const badge = m.expiryStatus === 'expired'
+      ? '<span class="badge badge-expired">期限切れ</span>'
+      : m.expiryStatus === 'warning'
+      ? '<span class="badge badge-warning">要注意</span>'
+      : m.expiryStatus === 'valid'
+      ? '<span class="badge badge-valid">有効</span>'
+      : '<span class="badge" style="background:#f0f0f0;color:#aaa">未設定</span>';
+
+    return '<tr style="' + (i%2===1?'background:#f8f8f8':'') + '">' +
+      '<td style="padding:8px 10px;font-weight:600">' + m.name + '</td>' +
+      '<td style="padding:8px 10px;font-size:12px;color:#666">' + (m.newId || '―') + '</td>' +
+      '<td style="padding:8px 10px;font-size:12px;color:#666">' + m.kanNo + '</td>' +
+      '<td style="padding:8px 10px;font-size:12px">' + (m.expiry || '―') + '</td>' +
+      '<td style="padding:8px 10px">' + badge + '</td>' +
+      '<td style="padding:8px 10px;font-size:11px;color:#aaa">' + (m.lastTraining || '―') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  return '<div style="font-size:13px;color:#666;margin-bottom:12px">採水員: <strong style="font-size:16px;color:#1F497D">' + c.count + '名</strong></div>' +
+    '<div style="overflow-x:auto">' +
+    '<table class="history-table" style="min-width:500px">' +
+      '<thead><tr>' +
+        '<th>氏名</th><th>採水員ID</th><th>管理士番号</th><th>満了日</th><th>状態</th><th>最終受講</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table></div>';
+}
+
 </script>
 </body>
 </html>
