@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>当日受付チェックイン</title>
+<style>
+  :root {
+    --accent: #2c5f8a;
+    --green:  #1a7f37;
+    --red:    #c0392b;
+    --warn:   #e67e22;
+    --bg:     #f0f4f8;
+    --card:   #ffffff;
+    --border: #d4c9b0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header h1 { font-size: 15px; font-weight: 600; }
+  header span { font-size: 11px; opacity: 0.8; }
+
+  .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+  /* 状態表示 */
+  .status-bar {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    font-size: 13px;
+  }
+  .status-count { font-size: 20px; font-weight: 700; color: var(--accent); }
+  .status-label { font-size: 11px; color: #888; }
+
+  /* カメラエリア */
+  .camera-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .camera-box h2 {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  #video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 300px;
+  }
+  #video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* QRスキャン枠 */
+  .scan-overlay {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%; height: 60%;
+    border: 2px solid rgba(255,255,255,0.8);
+    border-radius: 8px;
+  }
+  .scan-overlay::before, .scan-overlay::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: #fff;
+    border-style: solid;
+  }
+  .scan-overlay::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+  .scan-overlay::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+
+  #canvas { display: none; }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+  .btn-camera  { background: var(--accent); color: #fff; }
+  .btn-camera:hover { background: #1e4a6e; }
+  .btn-stop    { background: #666; color: #fff; }
+
+  /* 手動検索 */
+  .manual-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .manual-box h2 { font-size: 13px; color: var(--accent); margin-bottom: 10px; font-weight: 600; }
+  .input-row { display: flex; gap: 8px; }
+  .search-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fafafa;
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .btn-search { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+
+  /* チェックイン結果 */
+  .result-card {
+    display: none;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  }
+  .result-card.show { display: block; }
+  .result-card.found    { background: #fff; border: 2px solid var(--accent); }
+  .result-card.checked  { background: #e8f5e9; border: 2px solid var(--green); }
+  .result-card.notfound { background: #fff8f8; border: 2px solid var(--red); }
+  .result-card.already  { background: #fff3e0; border: 2px solid var(--warn); }
+
+  .result-name {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .result-company { font-size: 13px; color: #666; margin-bottom: 12px; }
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .result-item label { display: block; font-size: 11px; color: #999; margin-bottom: 2px; }
+  .result-item span  { font-size: 14px; font-weight: 600; }
+
+  .kubun-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+
+  .btn-checkin {
+    width: 100%;
+    padding: 16px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-checkin:hover { background: #155d27; }
+  .btn-cancel {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    color: #888;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .result-status {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 8px 0;
+  }
+  .result-status.ok  { color: var(--green); }
+  .result-status.warn { color: var(--warn); }
+  .result-status.err  { color: var(--red); }
+
+  /* 履歴 */
+  .history-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .history-box h2 { font-size: 13px; color: var(--accent); margin-bottom: 10px; font-weight: 600; }
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-time { font-size: 11px; color: #aaa; }
+
+  /* ローディング */
+  .loading { text-align: center; padding: 20px; color: #999; }
+
+  /* 設定モーダル */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+  }
+  .modal h3 { font-size: 15px; margin-bottom: 16px; color: var(--accent); }
+  .modal input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .modal-btns { display: flex; gap: 8px; }
+  .btn-modal-ok     { flex: 1; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .btn-modal-cancel { flex: 1; padding: 10px; background: #f0f0f0; color: #666; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 当日受付チェックイン</h1>
+  <button onclick="showSettings()" style="background:none;border:1px solid rgba(255,255,255,0.5);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">⚙️ 設定</button>
+</header>
+
+<div class="container">
+
+  <!-- 状態バー -->
+  <div class="status-bar">
+    <div>
+      <div class="status-label">開催日</div>
+      <div id="status-date" style="font-size:13px;font-weight:600">未設定</div>
+    </div>
+    <div style="text-align:center">
+      <div class="status-count" id="checkin-count">0</div>
+      <div class="status-label">チェックイン済</div>
+    </div>
+    <div style="text-align:center">
+      <div class="status-count" id="total-count" style="color:#888">-</div>
+      <div class="status-label">登録者数</div>
+    </div>
+  </div>
+
+  <!-- カメラスキャン -->
+  <div class="camera-box">
+    <h2>📷 QRコードをスキャン</h2>
+    <div id="video-container" style="display:none">
+      <video id="video" autoplay playsinline></video>
+      <div class="scan-overlay"></div>
+      <canvas id="canvas"></canvas>
+    </div>
+    <button class="btn btn-camera" id="btn-start-camera" onclick="startCamera()">カメラを起動してスキャン</button>
+    <button class="btn btn-stop" id="btn-stop-camera" onclick="stopCamera()" style="display:none">カメラを停止</button>
+  </div>
+
+  <!-- 手動検索 -->
+  <div class="manual-box">
+    <h2>🔍 手動検索（氏名・管理士番号）</h2>
+    <div class="input-row">
+      <input type="text" class="search-input" id="manual-input"
+        placeholder="氏名または管理士番号"
+        onkeydown="if(event.key==='Enter') manualSearch()">
+      <button class="btn-search" onclick="manualSearch()">検索</button>
+    </div>
+  </div>
+
+  <!-- チェックイン結果 -->
+  <div class="result-card" id="result-card">
+    <div id="result-body"></div>
+  </div>
+
+  <!-- チェックイン履歴 -->
+  <div class="history-box">
+    <h2>✅ チェックイン履歴</h2>
+    <div id="history-list"><div style="color:#aaa;font-size:13px;text-align:center;padding:10px">まだチェックインはありません</div></div>
+  </div>
+
+</div>
+
+<!-- 設定モーダル -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>⚙️ 設定</h3>
+    <label style="font-size:12px;color:#666;display:block;margin-bottom:4px">GAS WebアプリURL</label>
+    <input type="text" id="setting-gas-url" placeholder="https://script.google.com/macros/s/...">
+    <label style="font-size:12px;color:#666;display:block;margin-bottom:4px">開催日（例：2026/06/08）</label>
+    <input type="text" id="setting-open-date" placeholder="2026/06/08">
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeSettings()">キャンセル</button>
+      <button class="btn-modal-ok" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script>
+// ============================================================
+// 設定
+// ============================================================
+let GAS_URL   = localStorage.getItem('checkin_gas_url')   || '';
+let OPEN_DATE = localStorage.getItem('checkin_open_date') || '';
+let checkinHistory = [];
+let scanInterval = null;
+let videoStream  = null;
+let currentPerson = null;
+
+// ============================================================
+// 初期化
+// ============================================================
+window.onload = () => {
+  document.getElementById('status-date').textContent = OPEN_DATE || '未設定（設定ボタンから入力）';
+  if (!GAS_URL || !OPEN_DATE) {
+    showSettings();
+  } else {
+    loadStats();
+  }
+};
+
+// ============================================================
+// 設定
+// ============================================================
+function showSettings() {
+  document.getElementById('setting-gas-url').value   = GAS_URL;
+  document.getElementById('setting-open-date').value = OPEN_DATE;
+  document.getElementById('settings-modal').classList.add('show');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('show');
+}
+function saveSettings() {
+  GAS_URL   = document.getElementById('setting-gas-url').value.trim();
+  OPEN_DATE = document.getElementById('setting-open-date').value.trim();
+  localStorage.setItem('checkin_gas_url',   GAS_URL);
+  localStorage.setItem('checkin_open_date', OPEN_DATE);
+  document.getElementById('status-date').textContent = OPEN_DATE;
+  closeSettings();
+  loadStats();
+}
+
+// ============================================================
+// 統計取得
+// ============================================================
+function loadStats() {
+  if (!GAS_URL || !OPEN_DATE) return;
+  callApi({ action: 'checkinStats', openDate: OPEN_DATE }, data => {
+    if (data.status === 'ok') {
+      document.getElementById('checkin-count').textContent = data.checkedIn || 0;
+      document.getElementById('total-count').textContent   = data.total     || 0;
+    }
+  });
+}
+
+// ============================================================
+// カメラスキャン
+// ============================================================
+async function startCamera() {
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    const video = document.getElementById('video');
+    video.srcObject = videoStream;
+    document.getElementById('video-container').style.display = 'block';
+    document.getElementById('btn-start-camera').style.display = 'none';
+    document.getElementById('btn-stop-camera').style.display  = 'block';
+
+    video.addEventListener('loadedmetadata', () => {
+      scanInterval = setInterval(scanQR, 300);
+    });
+  } catch(e) {
+    alert('カメラへのアクセスが許可されていません。\nブラウザの設定でカメラを許可してください。');
+  }
+}
+
+function stopCamera() {
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (videoStream)  { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+  document.getElementById('video-container').style.display = 'none';
+  document.getElementById('btn-start-camera').style.display = 'block';
+  document.getElementById('btn-stop-camera').style.display  = 'none';
+}
+
+function scanQR() {
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+  if (code) {
+    stopCamera();
+    processQRCode(code.data);
+  }
+}
+
+// ============================================================
+// QRコード処理
+// ============================================================
+function processQRCode(data) {
+  try {
+    const parsed = JSON.parse(decodeURIComponent(data));
+    // 受講票QRコードの形式: {id, name, seat, date}
+    searchPerson(parsed.id || parsed.name || '');
+  } catch(e) {
+    // JSON形式でない場合はそのまま検索
+    searchPerson(data);
+  }
+}
+
+// ============================================================
+// 手動検索
+// ============================================================
+function manualSearch() {
+  const q = document.getElementById('manual-input').value.trim();
+  if (!q) return;
+  searchPerson(q);
+  document.getElementById('manual-input').value = '';
+}
+
+// ============================================================
+// 受講者検索
+// ============================================================
+function searchPerson(keyword) {
+  if (!GAS_URL) { showSettings(); return; }
+
+  const card = document.getElementById('result-card');
+  const body = document.getElementById('result-body');
+  card.className = 'result-card show found';
+  body.innerHTML = '<div class="loading">検索中...</div>';
+
+  callApi({ action: 'checkinSearch', q: keyword, openDate: OPEN_DATE }, data => {
+    if (data.status !== 'ok' || !data.person) {
+      card.className = 'result-card show notfound';
+      body.innerHTML =
+        '<div class="result-status err">❌ 見つかりません</div>' +
+        '<p style="text-align:center;color:#999;font-size:13px;margin-top:8px">「' + keyword + '」は受講者名簿にありません</p>' +
+        '<button class="btn-cancel" onclick="closeResult()">閉じる</button>';
+      return;
+    }
+
+    const p = data.person;
+    currentPerson = p;
+
+    if (p.checkedIn) {
+      // 既にチェックイン済み
+      card.className = 'result-card show already';
+      body.innerHTML =
+        '<div class="result-status warn">⚠️ チェックイン済み</div>' +
+        '<div class="result-name" style="text-align:center;margin:8px 0">' + p.name + '</div>' +
+        '<div class="result-company" style="text-align:center">' + p.company + '</div>' +
+        '<p style="text-align:center;color:#e67e22;font-size:12px">' + (p.checkinTime || '') + ' にチェックイン済みです</p>' +
+        '<button class="btn-cancel" onclick="closeResult()">閉じる</button>';
+      return;
+    }
+
+    // チェックイン前
+    card.className = 'result-card show found';
+    body.innerHTML =
+      '<div class="result-company">' + p.company + '</div>' +
+      '<div class="result-name">' + p.name + ' 様</div>' +
+      '<div class="result-grid">' +
+        '<div class="result-item"><label>採水員ID</label><span>' + (p.newId || '―') + '</span></div>' +
+        '<div class="result-item"><label>座席番号</label><span>' + (p.seatNo || '―') + '</span></div>' +
+        '<div class="result-item"><label>管理士番号</label><span>' + p.kanNo + '</span></div>' +
+        '<div class="result-item"><label>区分</label><span class="kubun-badge">' + p.kubun + '</span></div>' +
+      '</div>' +
+      '<button class="btn-checkin" onclick="doCheckin()">✅ チェックイン</button>' +
+      '<button class="btn-cancel" onclick="closeResult()">キャンセル</button>';
+  });
+}
+
+// ============================================================
+// チェックイン実行
+// ============================================================
+function doCheckin() {
+  if (!currentPerson) return;
+  const body = document.getElementById('result-body');
+  body.innerHTML = '<div class="loading">記録中...</div>';
+
+  callApi({
+    action  : 'checkin',
+    kanNo   : currentPerson.kanNo,
+    openDate: OPEN_DATE,
+  }, data => {
+    const card = document.getElementById('result-card');
+    if (data.status === 'ok') {
+      card.className = 'result-card show checked';
+      body.innerHTML =
+        '<div class="result-status ok">✅ チェックイン完了！</div>' +
+        '<div class="result-name" style="text-align:center;margin:12px 0">' + currentPerson.name + ' 様</div>' +
+        '<div style="text-align:center;color:#666;font-size:13px">座席番号: ' + (currentPerson.seatNo || '―') + '</div>' +
+        '<button class="btn-cancel" onclick="closeResult()" style="margin-top:16px">閉じる</button>';
+
+      // 履歴に追加
+      const now = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'});
+      checkinHistory.unshift({ name: currentPerson.name, time: now, seat: currentPerson.seatNo });
+      renderHistory();
+
+      // カウント更新
+      const cnt = document.getElementById('checkin-count');
+      cnt.textContent = parseInt(cnt.textContent) + 1;
+
+      // 3秒後に自動で閉じる
+      setTimeout(closeResult, 3000);
+    } else {
+      card.className = 'result-card show notfound';
+      body.innerHTML =
+        '<div class="result-status err">❌ エラー</div>' +
+        '<p style="text-align:center;color:#999;font-size:13px">' + (data.message || 'エラーが発生しました') + '</p>' +
+        '<button class="btn-cancel" onclick="closeResult()">閉じる</button>';
+    }
+    currentPerson = null;
+  });
+}
+
+function closeResult() {
+  document.getElementById('result-card').className = 'result-card';
+  currentPerson = null;
+}
+
+// ============================================================
+// 履歴表示
+// ============================================================
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (checkinHistory.length === 0) {
+    el.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:10px">まだチェックインはありません</div>';
+    return;
+  }
+  el.innerHTML = checkinHistory.slice(0, 20).map(h =>
+    '<div class="history-item">' +
+      '<div>' +
+        '<span style="font-weight:600">' + h.name + ' 様</span>' +
+        (h.seat ? ' <span style="color:#888;font-size:11px">座席: ' + h.seat + '</span>' : '') +
+      '</div>' +
+      '<span class="history-time">' + h.time + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+// ============================================================
+// API呼び出し（JSONP）
+// ============================================================
+let _cbCount = 0;
+function callApi(params, callback) {
+  if (!GAS_URL) { callback({ status: 'error', message: 'GAS URLが設定されていません' }); return; }
+  const cbName = '_cb' + (++_cbCount);
+  const qs = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+  const url = GAS_URL + '?' + qs + '&callback=' + cbName;
+  window[cbName] = data => { delete window[cbName]; document.head.removeChild(script); callback(data); };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => { delete window[cbName]; callback({ status: 'error', message: '接続エラー' }); };
+  document.head.appendChild(script);
+}
+</script>
+</body>
+</html>
