@@ -453,6 +453,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <span id="header-date" style="font-size:11px;opacity:0.8"></span>
+    <button onclick="openAdminSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer">⚙️</button>
     <a href="checkin.html" style="background:rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📋 当日受付</a>
   </div>
 </header>
@@ -461,7 +462,8 @@
 
   <!-- 設定案内 -->
   <div class="settings-hint" id="settings-hint" style="display:none">
-    ⚙️ GASのWebアプリURLが設定されていません。<code>config.js</code>の<code>GAS_URL</code>を設定してください。
+    ⚙️ GASのWebアプリURLが設定されていません。
+    <button onclick="openAdminSettings()" style="margin-left:8px;padding:4px 12px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px">設定する</button>
   </div>
 
   <!-- タブ -->
@@ -531,7 +533,7 @@
 // ============================================================
 // 設定（GASのWebアプリURL）
 // ============================================================
-const GAS_URL = ''; // ← GASデプロイ後にURLを入れる
+let GAS_URL = localStorage.getItem('josou_admin_gas_url') || '';
 
 // ============================================================
 // 初期化
@@ -543,6 +545,7 @@ window.onload = () => {
 
   if (!GAS_URL) {
     document.getElementById('settings-hint').style.display = 'block';
+    openAdminSettings();
   }
 };
 
@@ -817,6 +820,39 @@ function callApi(params, callback) {
     callback({ status: 'error', message: 'APIへの接続に失敗しました。' });
   };
   document.head.appendChild(script);
+}
+</script>
+
+<!-- 管理画面設定モーダル -->
+<div id="admin-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:480px">
+    <h3 style="font-size:16px;margin-bottom:16px;color:#1F497D">⚙️ 管理画面設定</h3>
+    <label style="display:block;font-size:12px;color:#888;margin-bottom:4px">GAS WebアプリURL</label>
+    <input type="text" id="admin-gas-url"
+      placeholder="https://script.google.com/macros/s/..."
+      style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:16px">
+    <div style="display:flex;gap:8px">
+      <button onclick="closeAdminSettings()" style="flex:1;padding:12px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer">キャンセル</button>
+      <button onclick="saveAdminSettings()" style="flex:1;padding:12px;background:#1F497D;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openAdminSettings() {
+  document.getElementById('admin-gas-url').value = GAS_URL;
+  const modal = document.getElementById('admin-settings-modal');
+  modal.style.display = 'flex';
+}
+function closeAdminSettings() {
+  document.getElementById('admin-settings-modal').style.display = 'none';
+}
+function saveAdminSettings() {
+  GAS_URL = document.getElementById('admin-gas-url').value.trim();
+  localStorage.setItem('josou_admin_gas_url', GAS_URL);
+  closeAdminSettings();
+  document.getElementById('settings-hint').style.display = GAS_URL ? 'none' : 'block';
+  if (GAS_URL) location.reload();
 }
 </script>
 </body>
