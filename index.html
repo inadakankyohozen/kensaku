@@ -559,6 +559,7 @@
 </div>
 
 <script>
+
 // ============================================================
 // 設定（GASのWebアプリURL）
 // ============================================================
@@ -851,24 +852,8 @@ function callApi(params, callback) {
   };
   document.head.appendChild(script);
 }
-</script>
 
-<!-- 管理画面設定モーダル -->
-<div id="admin-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:480px">
-    <h3 style="font-size:16px;margin-bottom:16px;color:#1F497D">⚙️ 管理画面設定</h3>
-    <label style="display:block;font-size:12px;color:#888;margin-bottom:4px">GAS WebアプリURL</label>
-    <input type="text" id="admin-gas-url"
-      placeholder="https://script.google.com/macros/s/..."
-      style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:16px">
-    <div style="display:flex;gap:8px">
-      <button onclick="closeAdminSettings()" style="flex:1;padding:12px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer">キャンセル</button>
-      <button onclick="saveAdminSettings()" style="flex:1;padding:12px;background:#1F497D;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">保存</button>
-    </div>
-  </div>
-</div>
 
-<script>
 function openAdminSettings() {
   document.getElementById('admin-gas-url').value = GAS_URL;
   const modal = document.getElementById('admin-settings-modal');
@@ -1006,6 +991,24 @@ function renderCompanyDetail(data) {
     '</table></div>';
 }
 
+
 </script>
+
+<!-- 管理画面設定モーダル -->
+<div id="admin-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:480px">
+    <h3 style="font-size:16px;margin-bottom:16px;color:#1F497D">⚙️ 管理画面設定</h3>
+    <label style="display:block;font-size:12px;color:#888;margin-bottom:4px">GAS WebアプリURL</label>
+    <input type="text" id="admin-gas-url"
+      placeholder="https://script.google.com/macros/s/..."
+      style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:16px">
+    <div style="display:flex;gap:8px">
+      <button onclick="closeAdminSettings()" style="flex:1;padding:12px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer">キャンセル</button>
+      <button onclick="saveAdminSettings()" style="flex:1;padding:12px;background:#1F497D;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">保存</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
