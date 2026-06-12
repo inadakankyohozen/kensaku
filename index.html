@@ -439,10 +439,12 @@ function loadCompanyList() {
       return;
     }
     allCompanies = data.results;
+    var unknownCount = data.unknownCount || 0;
     document.getElementById('company-summary').textContent =
       '契約採水事業所: ' + data.total + '件　採水員登録あり: ' +
-      data.results.filter(function(c) { return c.count > 0; }).length + '事業所';
-    renderCompanyList(allCompanies);
+      data.results.filter(function(c) { return c.count > 0; }).length + '事業所' +
+      (unknownCount > 0 ? '　所属不明: ' + unknownCount + '名' : '');
+    renderCompanyList(allCompanies, unknownCount);
   });
 }
 
@@ -453,13 +455,13 @@ function filterCompany() {
   renderCompanyList(filtered);
 }
 
-function renderCompanyList(list) {
+function renderCompanyList(list, unknownCount) {
   var el = document.getElementById('company-list');
   if (list.length === 0) {
     el.innerHTML = '<div class="error-msg">該当する事業所がありません</div>';
     return;
   }
-  el.innerHTML = list.map(function(c) {
+  var html = list.map(function(c) {
     var statusBadge = c.expired > 0
       ? '<span class="badge badge-expired">期限切れ ' + c.expired + '名</span>'
       : c.warning > 0
@@ -478,6 +480,36 @@ function renderCompanyList(list) {
       '</div>' +
     '</div>';
   }).join('');
+
+  // 所属不明カードを末尾に追加
+  if (unknownCount > 0) {
+    html += '<div class="card" style="border-color:#e67e22;background:#fffcf8" onclick="loadUnknownMembers()">' +
+      '<div>' +
+        '<div style="font-size:15px;font-weight:600;color:#e67e22">⚠️ 所属不明（勤務先未登録）</div>' +
+        '<div style="font-size:12px;color:#888;margin-top:4px">採水員マスタの勤務先が空欄の方</div>' +
+      '</div>' +
+      '<div class="card-right">' +
+        '<span class="badge badge-id" style="font-size:15px;background:#fff3e0;color:#e67e22">' + unknownCount + '名</span>' +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function loadUnknownMembers() {
+  var panel = document.getElementById('company-detail-panel');
+  panel.classList.add('show');
+  document.getElementById('company-detail-body').innerHTML = '<div class="loading">読み込み中...</div>';
+  document.getElementById('company-detail-name').textContent = '所属不明（勤務先未登録）';
+  document.getElementById('company-detail-sub').textContent = '採水員マスタの勤務先（I列）が空欄の方';
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+  callApi({action:'getUnknownMembers'}, function(data) {
+    if (data.status !== 'ok') {
+      document.getElementById('company-detail-body').innerHTML = '<div class="error-msg">' + data.message + '</div>';
+      return;
+    }
+    document.getElementById('company-detail-body').innerHTML = renderCompanyDetail(data);
+  });
 }
 
 function loadCompanyDetail(cd) {
