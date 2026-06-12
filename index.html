@@ -5,469 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>浄化槽管理士研修会 管理システム</title>
 <style>
-  :root {
-    --ink: #1a1a2e;
-    --paper: #f8f6f0;
-    --accent: #2c5f8a;
-    --accent2: #4a9b7f;
-    --warn: #c0392b;
-    --caution: #e67e22;
-    --border: #d4c9b0;
-    --shadow: rgba(44,95,138,0.12);
-  }
+:root {
+  --ink: #1a1a2e; --paper: #f8f6f0; --accent: #2c5f8a; --accent2: #4a9b7f;
+  --warn: #c0392b; --caution: #e67e22; --border: #d4c9b0; --shadow: rgba(44,95,138,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Serif JP','YuMincho',serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+header { background: var(--accent); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px var(--shadow); }
+header h1 { font-size: 15px; font-weight: 600; }
+.header-btns { display: flex; align-items: center; gap: 8px; }
+.header-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap; }
 
-  body {
-    font-family: 'Noto Serif JP', 'YuMincho', 'Yu Mincho', serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-  }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
 
-  /* ヘッダー */
-  header {
-    background: var(--accent);
-    color: #fff;
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 8px var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); flex-wrap: wrap; }
+.tab { padding: 8px 16px; border: none; background: none; font-size: 13px; font-family: inherit; cursor: pointer; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-  header h1 {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
+.search-box { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 2px 12px var(--shadow); }
+.search-box h2 { font-size: 14px; color: var(--accent); margin-bottom: 14px; }
+.search-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 200px; padding: 10px 16px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; font-family: inherit; background: var(--paper); outline: none; }
+.search-input:focus { border-color: var(--accent); }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--accent2); color: #fff; }
+.btn-warn { background: var(--caution); color: #fff; }
+.search-hint { margin-top: 10px; font-size: 12px; color: #888; }
 
-  header span {
-    font-size: 11px;
-    opacity: 0.8;
-  }
+.results-header { font-size: 13px; color: #666; margin-bottom: 12px; }
+.results-header strong { color: var(--accent); font-size: 16px; }
 
-  /* メインレイアウト */
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
+.card { background: #fff; border: 1.5px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; display: grid; grid-template-columns: 1fr auto; gap: 8px; box-shadow: 0 1px 4px var(--shadow); }
+.card:hover { border-color: var(--accent); box-shadow: 0 4px 16px var(--shadow); transform: translateY(-1px); }
+.card-name { font-size: 17px; font-weight: 600; }
+.card-kana { font-size: 11px; color: #999; margin-bottom: 4px; }
+.card-info { font-size: 12px; color: #666; line-height: 1.7; }
+.card-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
-  /* 検索ボックス */
-  .search-box {
-    background: #fff;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 12px var(--shadow);
-  }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-valid   { background: #e8f5e9; color: #2e7d32; }
+.badge-warning { background: #fff3e0; color: #e65100; }
+.badge-caution { background: #fffde7; color: #f57f17; }
+.badge-expired { background: #ffebee; color: #c62828; }
+.badge-id      { background: #e3f2fd; color: #1565c0; font-size: 13px; }
 
-  .search-box h2 {
-    font-size: 14px;
-    color: var(--accent);
-    margin-bottom: 14px;
-    letter-spacing: 0.05em;
-  }
+.detail-panel { display: none; background: #fff; border: 1.5px solid var(--accent); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px var(--shadow); }
+.detail-panel.show { display: block; }
+.detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.detail-name { font-size: 24px; font-weight: 700; }
+.detail-section { margin-bottom: 20px; }
+.detail-section h3 { font-size: 12px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 10px; }
+.detail-item label { display: block; font-size: 11px; color: #999; margin-bottom: 2px; }
+.detail-item span { font-size: 14px; font-weight: 500; }
+.history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.history-table th { background: var(--paper); padding: 8px 12px; text-align: left; font-size: 11px; color: #666; border-bottom: 1.5px solid var(--border); }
+.history-table td { padding: 8px 12px; border-bottom: 1px solid #f0ebe0; }
+.close-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer; color: #666; }
+.link-btn { display: inline-block; padding: 5px 12px; background: var(--accent); color: #fff; border-radius: 6px; font-size: 12px; text-decoration: none; }
 
-  .search-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
+.expiry-card { background: #fff; border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.expiry-card.expired { border-color: var(--warn); background: #fff8f8; }
+.expiry-card.warning { border-color: var(--caution); background: #fffcf8; }
 
-  .search-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 10px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
-    font-family: inherit;
-    background: var(--paper);
-    outline: none;
-    transition: border-color 0.2s;
-  }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: #fff; border: 1.5px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+.stat-card .num { font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+.stat-card .label { font-size: 11px; color: #888; }
 
-  .search-input:focus {
-    border-color: var(--accent);
-  }
+.loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.error-msg { background: #fff0f0; border: 1px solid #ffcdd2; border-radius: 8px; padding: 12px 16px; color: var(--warn); font-size: 13px; }
+.settings-hint { background: #f0f7ff; border: 1px solid #bbdefb; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #1565c0; margin-bottom: 20px; }
 
-  .btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
+/* 設定モーダル */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: 14px; padding: 22px; width: 100%; max-width: 480px; }
+.modal-box h3 { font-size: 16px; margin-bottom: 16px; color: var(--accent); }
+.modal-box label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; margin-top: 10px; }
+.modal-box input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+.btn-modal-ok { flex: 1; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.btn-modal-cancel { flex: 1; padding: 12px; background: #f0f0f0; color: #666; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
 
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-
-  .btn-primary:hover { background: #1e4a6e; }
-
-  .btn-secondary {
-    background: var(--accent2);
-    color: #fff;
-  }
-
-  .btn-secondary:hover { background: #3a7a65; }
-
-  .btn-warn {
-    background: var(--caution);
-    color: #fff;
-  }
-
-  .search-hint {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #888;
-  }
-
-  /* タブ */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 16px;
-    border-bottom: 2px solid var(--border);
-  }
-
-  .tab {
-    padding: 8px 18px;
-    border: none;
-    background: none;
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    color: #888;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: all 0.2s;
-  }
-
-  .tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-    font-weight: 600;
-  }
-
-  /* 検索結果 */
-  .results-header {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 12px;
-    padding: 0 4px;
-  }
-
-  .results-header strong {
-    color: var(--accent);
-    font-size: 16px;
-  }
-
-  /* カード */
-  .card {
-    background: #fff;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    box-shadow: 0 1px 4px var(--shadow);
-  }
-
-  .card:hover {
-    border-color: var(--accent);
-    box-shadow: 0 4px 16px var(--shadow);
-    transform: translateY(-1px);
-  }
-
-  .card-name {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-
-  .card-kana {
-    font-size: 11px;
-    color: #999;
-    margin-bottom: 4px;
-  }
-
-  .card-info {
-    font-size: 12px;
-    color: #666;
-    line-height: 1.7;
-  }
-
-  .card-right {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-  }
-
-  /* バッジ */
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-  }
-
-  .badge-valid   { background: #e8f5e9; color: #2e7d32; }
-  .badge-warning { background: #fff3e0; color: #e65100; }
-  .badge-caution { background: #fffde7; color: #f57f17; }
-  .badge-expired { background: #ffebee; color: #c62828; }
-  .badge-id      { background: #e3f2fd; color: #1565c0; font-size: 13px; }
-
-  /* 詳細パネル */
-  .detail-panel {
-    display: none;
-    background: #fff;
-    border: 1.5px solid var(--accent);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 20px var(--shadow);
-  }
-
-  .detail-panel.show { display: block; }
-
-  .detail-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .detail-name {
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-
-  .detail-kana {
-    font-size: 12px;
-    color: #999;
-    margin-top: 2px;
-  }
-
-  .detail-section {
-    margin-bottom: 20px;
-  }
-
-  .detail-section h3 {
-    font-size: 12px;
-    color: var(--accent);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-  }
-
-  .detail-item label {
-    display: block;
-    font-size: 11px;
-    color: #999;
-    margin-bottom: 2px;
-  }
-
-  .detail-item span {
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  /* 受講履歴テーブル */
-  .history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  .history-table th {
-    background: var(--paper);
-    padding: 8px 12px;
-    text-align: left;
-    font-size: 11px;
-    color: #666;
-    border-bottom: 1.5px solid var(--border);
-  }
-
-  .history-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #f0ebe0;
-  }
-
-  .history-table tr:last-child td { border-bottom: none; }
-
-  /* 有効期限カード */
-  .expiry-card {
-    background: #fff;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .expiry-card.expired { border-color: var(--warn); background: #fff8f8; }
-  .expiry-card.warning { border-color: var(--caution); background: #fffcf8; }
-
-  /* ローディング */
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: #999;
-    font-size: 14px;
-  }
-
-  .loading::after {
-    content: '';
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* エラー */
-  .error-msg {
-    background: #fff0f0;
-    border: 1px solid #ffcdd2;
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: var(--warn);
-    font-size: 13px;
-  }
-
-  /* 統計 */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .stat-card {
-    background: #fff;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-  }
-
-  .stat-card .num {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .stat-card .label {
-    font-size: 11px;
-    color: #888;
-  }
-
-  /* リンクボタン */
-  .link-btn {
-    display: inline-block;
-    padding: 5px 12px;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 6px;
-    font-size: 12px;
-    text-decoration: none;
-    transition: background 0.2s;
-  }
-
-  .link-btn:hover { background: #1e4a6e; }
-
-  .close-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #666;
-  }
-
-  /* 設定 */
-  .settings-hint {
-    background: #f0f7ff;
-    border: 1px solid #bbdefb;
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: #1565c0;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 600px) {
-    .search-row { flex-direction: column; }
-    .card { grid-template-columns: 1fr; }
-    .detail-grid { grid-template-columns: 1fr 1fr; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-  }
+@media (max-width:600px) {
+  .search-row { flex-direction: column; }
+  .card { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div style="display:flex;align-items:center;gap:12px">
-    <h1>🌿 浄化槽管理士研修会 管理システム</h1>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <h1>🌿 浄化槽管理士研修会 管理システム</h1>
+  <div class="header-btns">
     <span id="header-date" style="font-size:11px;opacity:0.8"></span>
-    <button onclick="openAdminSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer">⚙️</button>
-    <a href="checkin.html" style="background:rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">📋 当日受付</a>
+    <button class="header-btn" onclick="openSettings()">⚙️</button>
+    <a href="checkin.html" class="header-btn">📋 当日受付</a>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- 設定案内 -->
-  <div class="settings-hint" id="settings-hint" style="display:none">
-    ⚙️ GASのWebアプリURLが設定されていません。
-    <button onclick="openAdminSettings()" style="margin-left:8px;padding:4px 12px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px">設定する</button>
+  <div id="settings-hint" class="settings-hint" style="display:none">
+    ⚙️ GASのWebアプリURLが未設定です。
+    <button onclick="openSettings()" style="margin-left:8px;padding:4px 12px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px">設定する</button>
   </div>
 
   <!-- タブ -->
-  <div class="tabs">
+  <div class="tabs" id="tab-buttons">
     <button class="tab active" onclick="switchTab('search')">🔍 検索</button>
     <button class="tab" onclick="switchTab('expiry')">⏰ 有効期限</button>
     <button class="tab" onclick="switchTab('stats')">📊 集計</button>
@@ -485,22 +135,18 @@
         <button class="btn btn-primary" onclick="doSearch()">検索</button>
         <button class="btn btn-secondary" onclick="clearSearch()">クリア</button>
       </div>
-      <div class="search-hint">部分一致で検索できます。例：「鈴木」「10309」「12345」「環境センター」</div>
+      <div class="search-hint">部分一致で検索できます。例：「鈴木」「10309」「環境センター」</div>
     </div>
-
-    <!-- 詳細パネル -->
     <div class="detail-panel" id="detail-panel">
       <div class="detail-header">
         <div>
-          <div class="detail-kana" id="detail-kana"></div>
+          <div style="font-size:12px;color:#999" id="detail-kana"></div>
           <div class="detail-name" id="detail-name"></div>
         </div>
         <button class="close-btn" onclick="closeDetail()">✕ 閉じる</button>
       </div>
       <div id="detail-body"></div>
     </div>
-
-    <!-- 検索結果 -->
     <div id="search-results"></div>
   </div>
 
@@ -521,100 +167,123 @@
     <div id="expiry-results"></div>
   </div>
 
+  <!-- 集計タブ -->
+  <div id="tab-stats" style="display:none">
+    <div id="stats-results"><div class="loading">読み込み中...</div></div>
+  </div>
 
   <!-- 事業所タブ -->
   <div id="tab-company" style="display:none">
     <div class="search-box">
       <h2>🏢 採水事業所一覧</h2>
-      <div id="company-summary" style="font-size:13px;color:#666;margin-bottom:8px">読み込み中...</div>
-      <input type="text" class="search-input" id="company-search"
+      <div id="company-summary" style="font-size:13px;color:#666;margin-bottom:10px"></div>
+      <input type="text" class="search-input" id="company-filter"
         placeholder="事業所名で絞り込み..."
         oninput="filterCompany()"
-        style="width:100%;margin-top:8px">
+        style="width:100%">
     </div>
-
-    <!-- 事業所詳細パネル -->
     <div class="detail-panel" id="company-detail-panel">
       <div class="detail-header">
         <div>
           <div class="detail-name" id="company-detail-name"></div>
-          <div style="font-size:12px;color:#999;margin-top:2px" id="company-detail-addr"></div>
+          <div style="font-size:12px;color:#999;margin-top:2px" id="company-detail-sub"></div>
         </div>
         <button class="close-btn" onclick="closeCompanyDetail()">✕ 閉じる</button>
       </div>
       <div id="company-detail-body"></div>
     </div>
-
-    <!-- 事業所一覧 -->
     <div id="company-list"></div>
-  </div>
-
-  <!-- 集計タブ -->
-  <div id="tab-stats" style="display:none">
-    <div id="stats-results">
-      <div class="loading">集計データを読み込み中</div>
-    </div>
   </div>
 
 </div>
 
-<script>
+<!-- 設定モーダル -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-box">
+    <h3>⚙️ 設定</h3>
+    <label>GAS WebアプリURL</label>
+    <input type="text" id="s-gas-url" placeholder="https://script.google.com/macros/s/...">
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeSettings()">キャンセル</button>
+      <button class="btn-modal-ok" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
 
+<script>
 // ============================================================
-// 設定（GASのWebアプリURL）
+// グローバル変数
 // ============================================================
-let GAS_URL = localStorage.getItem('josou_admin_gas_url') || '';
+var GAS_URL = localStorage.getItem('josou_admin_gas_url') || '';
+var allCompanies = [];
 
 // ============================================================
 // 初期化
 // ============================================================
-window.onload = () => {
-  const now = new Date();
+window.onload = function() {
+  var now = new Date();
   document.getElementById('header-date').textContent =
     now.toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
-
   if (!GAS_URL) {
     document.getElementById('settings-hint').style.display = 'block';
-    openAdminSettings();
+    openSettings();
   }
 };
+
+// ============================================================
+// 設定
+// ============================================================
+function openSettings() {
+  document.getElementById('s-gas-url').value = GAS_URL;
+  document.getElementById('settings-modal').classList.add('show');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('show');
+}
+function saveSettings() {
+  GAS_URL = document.getElementById('s-gas-url').value.trim();
+  localStorage.setItem('josou_admin_gas_url', GAS_URL);
+  closeSettings();
+  document.getElementById('settings-hint').style.display = GAS_URL ? 'none' : 'block';
+}
 
 // ============================================================
 // タブ切替
 // ============================================================
 function switchTab(name) {
-  ['search','expiry','stats','company'].forEach(t => {
-    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+  var tabs = ['search','expiry','stats','company'];
+  tabs.forEach(function(t) {
+    var el = document.getElementById('tab-' + t);
+    if (el) el.style.display = t === name ? 'block' : 'none';
   });
-  document.querySelectorAll('.tab').forEach((btn, i) => {
-    btn.classList.toggle('active', ['search','expiry','stats','company'][i] === name);
+  var btns = document.querySelectorAll('.tab');
+  btns.forEach(function(btn, i) {
+    btn.classList.toggle('active', tabs[i] === name);
   });
   if (name === 'stats')   loadStats();
   if (name === 'company') loadCompanyList();
 }
 
 // ============================================================
-// 検索
+// 検索タブ
 // ============================================================
 function doSearch() {
-  const q = document.getElementById('search-input').value.trim();
+  var q = document.getElementById('search-input').value.trim();
   if (!q) return;
-
-  const el = document.getElementById('search-results');
-  el.innerHTML = '<div class="loading">検索中</div>';
+  var el = document.getElementById('search-results');
+  el.innerHTML = '<div class="loading">検索中...</div>';
   closeDetail();
-
-  callApi({ action: 'search', q }, data => {
+  callApi({action:'search', q:q}, function(data) {
     if (data.status !== 'ok') {
-      el.innerHTML = `<div class="error-msg">⚠️ ${data.message}</div>`;
+      el.innerHTML = '<div class="error-msg">⚠️ ' + data.message + '</div>';
       return;
     }
     if (data.results.length === 0) {
       el.innerHTML = '<div class="error-msg">該当者が見つかりませんでした。</div>';
       return;
     }
-    el.innerHTML = `<div class="results-header"><strong>${data.count}</strong> 件見つかりました</div>` +
-      data.results.map(r => renderCard(r)).join('');
+    el.innerHTML = '<div class="results-header"><strong>' + data.count + '</strong> 件見つかりました</div>' +
+      data.results.map(function(r) { return renderCard(r); }).join('');
   });
 }
 
@@ -624,46 +293,35 @@ function clearSearch() {
   closeDetail();
 }
 
-// ============================================================
-// カード描画
-// ============================================================
 function renderCard(r) {
-  const badge = expiryBadge(r.expiryStatus, r.expiry);
-  return `
-  <div class="card" onclick="loadDetail('${r.kanNo}')">
-    <div>
-      <div class="card-kana">${r.kana || ''}</div>
-      <div class="card-name">${r.name}</div>
-      <div class="card-info">
-        ${r.company || '（所属なし）'}<br>
-        管理士番号: ${r.kanNo}　採水員ID: <span class="badge badge-id">${r.newId || '未発番'}</span>
-        ${r.lastTraining ? '　最終受講: ' + r.lastTraining : ''}
-      </div>
-    </div>
-    <div class="card-right">
-      ${badge}
-      <span style="font-size:11px;color:#aaa">受講 ${r.historyCount}回</span>
-    </div>
-  </div>`;
+  var badge = expiryBadge(r.expiryStatus, r.expiry);
+  return '<div class="card" onclick="loadDetail(\'' + r.kanNo + '\')">' +
+    '<div>' +
+      '<div class="card-kana">' + (r.kana||'') + '</div>' +
+      '<div class="card-name">' + r.name + '</div>' +
+      '<div class="card-info">' +
+        (r.company||'（所属なし）') + '<br>' +
+        '管理士番号: ' + r.kanNo + '　採水員ID: <span class="badge badge-id">' + (r.newId||'未発番') + '</span>' +
+        (r.lastTraining ? '　最終受講: ' + r.lastTraining : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="card-right">' + badge + '<span style="font-size:11px;color:#aaa">受講 ' + r.historyCount + '回</span></div>' +
+  '</div>';
 }
 
-// ============================================================
-// 詳細
-// ============================================================
 function loadDetail(kanNo) {
-  const panel = document.getElementById('detail-panel');
+  var panel = document.getElementById('detail-panel');
   panel.classList.add('show');
-  document.getElementById('detail-body').innerHTML = '<div class="loading">読み込み中</div>';
+  document.getElementById('detail-body').innerHTML = '<div class="loading">読み込み中...</div>';
   document.getElementById('detail-name').textContent = '';
   document.getElementById('detail-kana').textContent = '';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  callApi({ action: 'detail', kanNo }, data => {
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+  callApi({action:'detail', kanNo:kanNo}, function(data) {
     if (data.status !== 'ok') {
-      document.getElementById('detail-body').innerHTML = `<div class="error-msg">${data.message}</div>`;
+      document.getElementById('detail-body').innerHTML = '<div class="error-msg">' + data.message + '</div>';
       return;
     }
-    const m = data.member;
+    var m = data.member;
     document.getElementById('detail-name').textContent = m.name;
     document.getElementById('detail-kana').textContent = m.kana;
     document.getElementById('detail-body').innerHTML = renderDetail(data);
@@ -675,280 +333,170 @@ function closeDetail() {
 }
 
 function renderDetail(data) {
-  const m = data.member;
-  const badge = expiryBadge(m.expiryStatus, m.expiry);
-
-  const ids = [
-    m.newId  ? `新採水員ID: <strong>${m.newId}</strong>` : '',
-    m.oldId1 ? `旧ID①: ${m.oldId1}` : '',
-    m.oldId2 ? `旧ID②: ${m.oldId2}` : '',
-    m.oldId3 ? `旧ID③: ${m.oldId3}` : '',
+  var m = data.member;
+  var badge = expiryBadge(m.expiryStatus, m.expiry);
+  var ids = [
+    m.newId  ? '新採水員ID: <strong>' + m.newId  + '</strong>' : '',
+    m.oldId1 ? '旧ID①: ' + m.oldId1 : '',
   ].filter(Boolean).join('　');
 
-  const historyRows = data.history.length === 0
+  var histRows = data.history.length === 0
     ? '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px">受講履歴なし</td></tr>'
-    : data.history.map(h => `
-      <tr>
-        <td>${h.year}</td>
-        <td>${h.date}</td>
-        <td>${h.venue}</td>
-        <td>${h.kubun}</td>
-        <td>${h.attend === '欠席' ? '<span style="color:#c62828">欠席</span>' : '出席'}</td>
-      </tr>`).join('');
+    : data.history.map(function(h) {
+        return '<tr><td>' + h.year + '</td><td>' + h.date + '</td><td>' + h.venue + '</td><td>' + h.kubun + '</td><td>' +
+          (h.attend === '欠席' ? '<span style="color:#c62828">欠席</span>' : '出席') + '</td></tr>';
+      }).join('');
 
-  const certLinks = data.certs.length === 0
+  var certLinks = data.certs.length === 0
     ? '<p style="color:#aaa;font-size:13px">書類リンクなし</p>'
-    : data.certs.map(c => `
-      <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;font-size:13px">
-        <span>${c.date}</span>
-        ${c.certLink   ? `<a class="link-btn" href="${c.certLink}"   target="_blank">委嘱状</a>` : ''}
-        ${c.shuryoLink ? `<a class="link-btn" href="${c.shuryoLink}" target="_blank">修了証</a>` : ''}
-        ${c.certSent   ? `<span style="color:#888;font-size:11px">送付済: ${c.certSent}</span>` : ''}
-      </div>`).join('');
+    : data.certs.map(function(c) {
+        return '<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;font-size:13px">' +
+          '<span>' + c.date + '</span>' +
+          (c.certLink   ? '<a class="link-btn" href="' + c.certLink   + '" target="_blank">委嘱状</a>' : '') +
+          (c.shuryoLink ? '<a class="link-btn" href="' + c.shuryoLink + '" target="_blank">修了証</a>' : '') +
+          '</div>';
+      }).join('');
 
-  return `
-  <div class="detail-section">
-    <h3>基本情報</h3>
-    <div class="detail-grid">
-      <div class="detail-item"><label>管理士番号</label><span>${m.kanNo}</span></div>
-      <div class="detail-item"><label>所属</label><span>${m.company || '―'}</span></div>
-      <div class="detail-item"><label>採水員ID</label><span>${ids}</span></div>
-      <div class="detail-item"><label>有効期限</label><span>${m.expiry || '―'} ${badge}</span></div>
-      ${m.birthday ? `<div class="detail-item"><label>生年月日</label><span>${m.birthday}</span></div>` : ''}
-      ${m.tel ? `<div class="detail-item"><label>電話</label><span>${m.tel}</span></div>` : ''}
-    </div>
-  </div>
-
-  <div class="detail-section">
-    <h3>受講履歴（${data.history.length}回）</h3>
-    <table class="history-table">
-      <thead>
-        <tr><th>年度</th><th>開催日</th><th>会場</th><th>区分</th><th>出欠</th></tr>
-      </thead>
-      <tbody>${historyRows}</tbody>
-    </table>
-  </div>
-
-  <div class="detail-section">
-    <h3>委嘱状・修了証</h3>
-    ${certLinks}
-  </div>`;
+  return '<div class="detail-section"><h3>基本情報</h3>' +
+    '<div class="detail-grid">' +
+      '<div class="detail-item"><label>管理士番号</label><span>' + m.kanNo + '</span></div>' +
+      '<div class="detail-item"><label>所属</label><span>' + (m.company||'―') + '</span></div>' +
+      '<div class="detail-item"><label>採水員ID</label><span>' + ids + '</span></div>' +
+      '<div class="detail-item"><label>有効期限</label><span>' + (m.expiry||'―') + ' ' + badge + '</span></div>' +
+    '</div></div>' +
+    '<div class="detail-section"><h3>受講履歴（' + data.history.length + '回）</h3>' +
+      '<table class="history-table"><thead><tr><th>年度</th><th>開催日</th><th>会場</th><th>区分</th><th>出欠</th></tr></thead>' +
+      '<tbody>' + histRows + '</tbody></table></div>' +
+    '<div class="detail-section"><h3>委嘱状・修了証</h3>' + certLinks + '</div>';
 }
 
 // ============================================================
-// 有効期限
+// 有効期限タブ
 // ============================================================
 function loadExpiry() {
-  const months = document.getElementById('expiry-months').value;
-  const el = document.getElementById('expiry-results');
-  el.innerHTML = '<div class="loading">読み込み中</div>';
-
-  callApi({ action: 'expiring', months }, data => {
+  var months = document.getElementById('expiry-months').value;
+  var el = document.getElementById('expiry-results');
+  el.innerHTML = '<div class="loading">読み込み中...</div>';
+  callApi({action:'expiring', months:months}, function(data) {
     if (data.status !== 'ok') {
-      el.innerHTML = `<div class="error-msg">${data.message}</div>`;
+      el.innerHTML = '<div class="error-msg">' + data.message + '</div>';
       return;
     }
     if (data.results.length === 0) {
       el.innerHTML = '<div class="error-msg">該当者はいません。</div>';
       return;
     }
-    el.innerHTML = `<div class="results-header"><strong>${data.count}</strong> 名が対象です</div>` +
-      data.results.map(r => `
-      <div class="expiry-card ${r.status}">
-        <div>
-          <div style="font-weight:600;font-size:15px">${r.name}</div>
-          <div style="font-size:12px;color:#666">${r.company}　管理士番号: ${r.kanNo}</div>
-        </div>
-        <div style="text-align:right">
-          ${expiryBadge(r.status, r.expiry)}
-          <div style="font-size:11px;color:#999;margin-top:4px">
-            ${r.diffDays < 0 ? '期限切れ ' + Math.abs(r.diffDays) + '日' : '残り ' + r.diffDays + '日'}
-          </div>
-        </div>
-      </div>`).join('');
+    el.innerHTML = '<div class="results-header"><strong>' + data.count + '</strong> 名が対象です</div>' +
+      data.results.map(function(r) {
+        return '<div class="expiry-card ' + r.status + '">' +
+          '<div><div style="font-weight:600;font-size:15px">' + r.name + '</div>' +
+          '<div style="font-size:12px;color:#666">' + r.company + '　管理士番号: ' + r.kanNo + '</div></div>' +
+          '<div style="text-align:right">' + expiryBadge(r.status, r.expiry) +
+          '<div style="font-size:11px;color:#999;margin-top:4px">' +
+            (r.diffDays < 0 ? '期限切れ ' + Math.abs(r.diffDays) + '日' : '残り ' + r.diffDays + '日') +
+          '</div></div></div>';
+      }).join('');
   });
 }
 
 // ============================================================
-// 集計
+// 集計タブ
 // ============================================================
 function loadStats() {
-  const el = document.getElementById('stats-results');
-  el.innerHTML = '<div class="loading">集計中</div>';
-
-  callApi({ action: 'stats' }, data => {
+  var el = document.getElementById('stats-results');
+  el.innerHTML = '<div class="loading">集計中...</div>';
+  callApi({action:'stats'}, function(data) {
     if (data.status !== 'ok') {
-      el.innerHTML = `<div class="error-msg">${data.message}</div>`;
+      el.innerHTML = '<div class="error-msg">' + data.message + '</div>';
       return;
     }
-    const s = data.stats;
-    const byYearHtml = Object.entries(s.byYear).sort().map(([y,c]) =>
-      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0ebe0;font-size:13px">
-        <span>${y}年度</span><strong>${c}名</strong>
-      </div>`).join('');
-
-    el.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num">${s.totalMembers}</div><div class="label">総登録者数</div></div>
-      <div class="stat-card"><div class="num">${s.withNewId}</div><div class="label">新ID発番済</div></div>
-      <div class="stat-card" style="border-color:#ffcdd2">
-        <div class="num" style="color:#c62828">${s.expiry.expired}</div>
-        <div class="label">期限切れ</div>
-      </div>
-      <div class="stat-card" style="border-color:#ffe0b2">
-        <div class="num" style="color:#e65100">${s.expiry.warning}</div>
-        <div class="label">6ヶ月以内</div>
-      </div>
-      <div class="stat-card" style="border-color:#c8e6c9">
-        <div class="num" style="color:#2e7d32">${s.expiry.valid}</div>
-        <div class="label">有効</div>
-      </div>
-    </div>
-    <div class="search-box">
-      <h2>年度別受講者数</h2>
-      ${byYearHtml}
-    </div>`;
+    var s = data.stats;
+    var byYearHtml = Object.entries(s.byYear).sort().map(function(e) {
+      return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0ebe0;font-size:13px"><span>' + e[0] + '年度</span><strong>' + e[1] + '名</strong></div>';
+    }).join('');
+    el.innerHTML =
+      '<div class="stats-grid">' +
+        '<div class="stat-card"><div class="num">' + s.totalMembers + '</div><div class="label">総登録者数</div></div>' +
+        '<div class="stat-card"><div class="num">' + s.withNewId + '</div><div class="label">新ID発番済</div></div>' +
+        '<div class="stat-card" style="border-color:#ffcdd2"><div class="num" style="color:#c62828">' + s.expiry.expired + '</div><div class="label">期限切れ</div></div>' +
+        '<div class="stat-card" style="border-color:#ffe0b2"><div class="num" style="color:#e65100">' + s.expiry.warning + '</div><div class="label">6ヶ月以内</div></div>' +
+        '<div class="stat-card" style="border-color:#c8e6c9"><div class="num" style="color:#2e7d32">' + s.expiry.valid + '</div><div class="label">有効</div></div>' +
+      '</div>' +
+      '<div class="search-box"><h2>年度別受講者数</h2>' + byYearHtml + '</div>';
   });
-}
-
-// ============================================================
-// 有効期限バッジ
-// ============================================================
-function expiryBadge(status, expiry) {
-  const labels = {
-    valid  : '✅ 有効',
-    caution: '⚠️ 要注意',
-    warning: '🔶 6ヶ月以内',
-    expired: '❌ 期限切れ',
-  };
-  return `<span class="badge badge-${status}">${labels[status] || status}${expiry ? '<br><small>'+expiry+'</small>' : ''}</span>`;
-}
-
-// ============================================================
-// API呼び出し（JSONP）
-// ============================================================
-let _cbCount = 0;
-function callApi(params, callback) {
-  if (!GAS_URL) {
-    callback({ status: 'error', message: 'GAS URLが設定されていません。config.jsを確認してください。' });
-    return;
-  }
-
-  const cbName = '_cb' + (++_cbCount);
-  const qs = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
-  const url = GAS_URL + '?' + qs + '&callback=' + cbName;
-
-  window[cbName] = data => {
-    delete window[cbName];
-    document.head.removeChild(script);
-    callback(data);
-  };
-
-  const script = document.createElement('script');
-  script.src = url;
-  script.onerror = () => {
-    delete window[cbName];
-    callback({ status: 'error', message: 'APIへの接続に失敗しました。' });
-  };
-  document.head.appendChild(script);
-}
-
-
-function openAdminSettings() {
-  document.getElementById('admin-gas-url').value = GAS_URL;
-  const modal = document.getElementById('admin-settings-modal');
-  modal.style.display = 'flex';
-}
-function closeAdminSettings() {
-  document.getElementById('admin-settings-modal').style.display = 'none';
-}
-function saveAdminSettings() {
-  GAS_URL = document.getElementById('admin-gas-url').value.trim();
-  localStorage.setItem('josou_admin_gas_url', GAS_URL);
-  closeAdminSettings();
-  document.getElementById('settings-hint').style.display = GAS_URL ? 'none' : 'block';
-  if (GAS_URL) location.reload();
 }
 
 // ============================================================
 // 事業所タブ
 // ============================================================
-let allCompanies = [];
-
 function loadCompanyList() {
-  const el = document.getElementById('company-list');
-  el.innerHTML = '<div class="loading">読み込み中</div>';
-
-  callApi({ action: 'getCompanyList' }, data => {
+  var el = document.getElementById('company-list');
+  el.innerHTML = '<div class="loading">読み込み中...</div>';
+  document.getElementById('company-summary').textContent = '';
+  callApi({action:'getCompanyList'}, function(data) {
     if (data.status !== 'ok') {
       el.innerHTML = '<div class="error-msg">取得できませんでした</div>';
       return;
     }
     allCompanies = data.results;
     document.getElementById('company-summary').textContent =
-      '契約採水事業所: ' + data.total + '件　登録採水員あり: ' +
-      data.results.filter(c => c.count > 0).length + '事業所';
+      '契約採水事業所: ' + data.total + '件　採水員登録あり: ' +
+      data.results.filter(function(c) { return c.count > 0; }).length + '事業所';
     renderCompanyList(allCompanies);
   });
 }
 
 function filterCompany() {
-  const q = document.getElementById('company-search').value.trim();
+  var q = document.getElementById('company-filter').value.trim();
   if (!q) { renderCompanyList(allCompanies); return; }
-  const filtered = allCompanies.filter(c => c.name.includes(q));
+  var filtered = allCompanies.filter(function(c) { return c.name.includes(q); });
   renderCompanyList(filtered);
 }
 
 function renderCompanyList(list) {
-  const el = document.getElementById('company-list');
+  var el = document.getElementById('company-list');
   if (list.length === 0) {
     el.innerHTML = '<div class="error-msg">該当する事業所がありません</div>';
     return;
   }
-  el.innerHTML = list.map(c => {
-    const statusHtml = c.expired > 0
+  el.innerHTML = list.map(function(c) {
+    var statusBadge = c.expired > 0
       ? '<span class="badge badge-expired">期限切れ ' + c.expired + '名</span>'
       : c.warning > 0
       ? '<span class="badge badge-warning">要注意 ' + c.warning + '名</span>'
       : c.count > 0
       ? '<span class="badge badge-valid">有効</span>'
       : '<span class="badge" style="background:#f0f0f0;color:#aaa">未登録</span>';
-
-    return '<div class="card" onclick="loadCompanyDetail('' + c.cd + '')">' +
+    return '<div class="card" onclick="loadCompanyDetail(' + "'" + c.cd + "'" + ')">' +
       '<div>' +
         '<div style="font-size:15px;font-weight:600">' + c.name + '</div>' +
-        '<div style="font-size:12px;color:#888;margin-top:4px">' +
-          (c.addr || '住所未登録') +
-        '</div>' +
+        '<div style="font-size:12px;color:#888;margin-top:4px">' + (c.addr||'住所未登録') + '</div>' +
       '</div>' +
       '<div class="card-right">' +
-        '<span class="badge badge-id" style="font-size:14px">' + c.count + '名</span>' +
-        statusHtml +
+        '<span class="badge badge-id" style="font-size:15px">' + c.count + '名</span>' +
+        statusBadge +
       '</div>' +
     '</div>';
   }).join('');
 }
 
 function loadCompanyDetail(cd) {
-  const panel = document.getElementById('company-detail-panel');
+  var panel = document.getElementById('company-detail-panel');
   panel.classList.add('show');
-  document.getElementById('company-detail-body').innerHTML = '<div class="loading">読み込み中</div>';
+  document.getElementById('company-detail-body').innerHTML = '<div class="loading">読み込み中...</div>';
   document.getElementById('company-detail-name').textContent = '';
-  document.getElementById('company-detail-addr').textContent = '';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  callApi({ action: 'getCompanyDetail', cd }, data => {
+  document.getElementById('company-detail-sub').textContent = '';
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+  callApi({action:'getCompanyDetail', cd:cd}, function(data) {
     if (data.status !== 'ok') {
-      document.getElementById('company-detail-body').innerHTML =
-        '<div class="error-msg">' + data.message + '</div>';
+      document.getElementById('company-detail-body').innerHTML = '<div class="error-msg">' + data.message + '</div>';
       return;
     }
-    const c = data.company;
+    var c = data.company;
     document.getElementById('company-detail-name').textContent = c.name;
-    document.getElementById('company-detail-addr').textContent =
-      (c.addr || '') + (c.tel ? '　TEL: ' + c.tel : '');
-    document.getElementById('company-detail-body').innerHTML =
-      renderCompanyDetail(data);
+    document.getElementById('company-detail-sub').textContent =
+      (c.addr||'') + (c.tel ? '　TEL: ' + c.tel : '');
+    document.getElementById('company-detail-body').innerHTML = renderCompanyDetail(data);
   });
 }
 
@@ -957,58 +505,64 @@ function closeCompanyDetail() {
 }
 
 function renderCompanyDetail(data) {
-  const c = data.company;
   if (data.members.length === 0) {
     return '<p style="color:#aaa;font-size:13px;padding:16px">採水員マスタに登録されている採水員が見つかりませんでした。</p>';
   }
-
-  const rows = data.members.map((m, i) => {
-    const badge = m.expiryStatus === 'expired'
-      ? '<span class="badge badge-expired">期限切れ</span>'
-      : m.expiryStatus === 'warning'
-      ? '<span class="badge badge-warning">要注意</span>'
-      : m.expiryStatus === 'valid'
-      ? '<span class="badge badge-valid">有効</span>'
+  var rows = data.members.map(function(m, i) {
+    var badge = m.expiryStatus === 'expired' ? '<span class="badge badge-expired">期限切れ</span>'
+      : m.expiryStatus === 'warning' ? '<span class="badge badge-warning">要注意</span>'
+      : m.expiryStatus === 'valid'   ? '<span class="badge badge-valid">有効</span>'
       : '<span class="badge" style="background:#f0f0f0;color:#aaa">未設定</span>';
-
     return '<tr style="' + (i%2===1?'background:#f8f8f8':'') + '">' +
       '<td style="padding:8px 10px;font-weight:600">' + m.name + '</td>' +
-      '<td style="padding:8px 10px;font-size:12px;color:#666">' + (m.newId || '―') + '</td>' +
+      '<td style="padding:8px 10px;font-size:12px;color:#666">' + (m.newId||'―') + '</td>' +
       '<td style="padding:8px 10px;font-size:12px;color:#666">' + m.kanNo + '</td>' +
-      '<td style="padding:8px 10px;font-size:12px">' + (m.expiry || '―') + '</td>' +
+      '<td style="padding:8px 10px;font-size:12px">' + (m.expiry||'―') + '</td>' +
       '<td style="padding:8px 10px">' + badge + '</td>' +
-      '<td style="padding:8px 10px;font-size:11px;color:#aaa">' + (m.lastTraining || '―') + '</td>' +
+      '<td style="padding:8px 10px;font-size:11px;color:#aaa">' + (m.lastTraining||'―') + '</td>' +
     '</tr>';
   }).join('');
-
-  return '<div style="font-size:13px;color:#666;margin-bottom:12px">採水員: <strong style="font-size:16px;color:#1F497D">' + c.count + '名</strong></div>' +
-    '<div style="overflow-x:auto">' +
-    '<table class="history-table" style="min-width:500px">' +
-      '<thead><tr>' +
-        '<th>氏名</th><th>採水員ID</th><th>管理士番号</th><th>満了日</th><th>状態</th><th>最終受講</th>' +
-      '</tr></thead>' +
-      '<tbody>' + rows + '</tbody>' +
-    '</table></div>';
+  return '<div style="font-size:13px;color:#666;margin-bottom:12px">採水員: <strong style="font-size:16px;color:#2c5f8a">' + data.company.count + '名</strong></div>' +
+    '<div style="overflow-x:auto"><table class="history-table" style="min-width:500px">' +
+    '<thead><tr><th>氏名</th><th>採水員ID</th><th>管理士番号</th><th>満了日</th><th>状態</th><th>最終受講</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>';
 }
 
+// ============================================================
+// 有効期限バッジ
+// ============================================================
+function expiryBadge(status, expiry) {
+  var labels = {valid:'✅ 有効', caution:'⚠️ 要注意', warning:'🔶 6ヶ月以内', expired:'❌ 期限切れ'};
+  return '<span class="badge badge-' + (status||'valid') + '">' + (labels[status]||status||'―') + '</span>';
+}
 
+// ============================================================
+// JSONP API呼び出し
+// ============================================================
+var _cbCount = 0;
+function callApi(params, callback) {
+  if (!GAS_URL) {
+    callback({status:'error', message:'GAS URLが設定されていません'});
+    return;
+  }
+  var cbName = '_cb' + (++_cbCount);
+  var qs = Object.keys(params).map(function(k) {
+    return k + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  var url = GAS_URL + '?' + qs + '&callback=' + cbName;
+  window[cbName] = function(data) {
+    delete window[cbName];
+    document.head.removeChild(script);
+    callback(data);
+  };
+  var script = document.createElement('script');
+  script.src = url;
+  script.onerror = function() {
+    delete window[cbName];
+    callback({status:'error', message:'APIへの接続に失敗しました'});
+  };
+  document.head.appendChild(script);
+}
 </script>
-
-<!-- 管理画面設定モーダル -->
-<div id="admin-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:480px">
-    <h3 style="font-size:16px;margin-bottom:16px;color:#1F497D">⚙️ 管理画面設定</h3>
-    <label style="display:block;font-size:12px;color:#888;margin-bottom:4px">GAS WebアプリURL</label>
-    <input type="text" id="admin-gas-url"
-      placeholder="https://script.google.com/macros/s/..."
-      style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:16px">
-    <div style="display:flex;gap:8px">
-      <button onclick="closeAdminSettings()" style="flex:1;padding:12px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer">キャンセル</button>
-      <button onclick="saveAdminSettings()" style="flex:1;padding:12px;background:#1F497D;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">保存</button>
-    </div>
-  </div>
-</div>
-
-
 </body>
 </html>
